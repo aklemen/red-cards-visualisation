@@ -1,11 +1,31 @@
+import controlP5.*;
+
 import java.util.Date;
 
-Table homeLocs;
-Table awayLocs;
-Table redCardLocs;
+// Locations in usual mode
+
+float homeX[];
+float awayX[];
+float redX[];
+
+// Locations in special mode
+
+float homeSpecialX[];
+float awaySpecialX[];
+float redSpecialX[];
+
+// Current locations
+
+float homeSpecialX[];
+float awaySpecialX[];
+float redSpecialX[];
+
+float redCardDistances[];
+
+ControlP5 cp5;
 
 float unit; 
-int w, h;
+Toggle modeSwitch;
 
 float closestDist;
 String closestText;
@@ -22,12 +42,28 @@ void setup() {
   size (1500, 1000);
   surface.setResizable(true);
   smooth();
-  w = width;
-  h = height;
 
   // init list
 
   loadFileToObjectList();
+
+  redCardDistances = new float[listOfMatchesSize];
+  homeLocsX = new float[listOfMatchesSize];
+  awayLocsX = new float[listOfMatchesSize];
+  redCardLocsX = new float[listOfMatchesSize];
+
+  cp5 = new ControlP5(this);
+
+  unit = (height - (2*marginVertical)) / (listOfMatchesSize);
+
+  modeSwitch = cp5.addToggle("modeSwitch")
+    .setCaptionLabel("")
+    .setMode(ControlP5.SWITCH)
+    .setColorBackground(lightGrey)
+    .setColorForeground(home)
+    .setValueLabel("HEEJ") 
+    //.setValue(true)
+    ;
 }
 
 void draw() {
@@ -86,9 +122,11 @@ void draw() {
         drawGoal(tempGoals[j], i, "away");
       }
     }
-    
   }
-  
+
+  rectMode(CENTER);
+  modeSwitch.setSize((int)unit*5, (int)unit*3);
+  modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical*3);
 }
 
 
@@ -122,9 +160,12 @@ void drawName(int i) {
   text(listOfMatches.get(i).getAwayTeam(), marginHorizontal/2 + (unit/2), marginVertical+(unit/2)+(i*unit));
 }
 
-void drawRedCard(float minute, float i, String homeOrAway) {
+void drawRedCard(float minute, int i, String homeOrAway) {
   float x = mapMinutes(minute);
-  println("LOČI OD SREDINE: ", width/2 - x);
+  redCardDistances[i] = width/2 - x;
+
+  x = redCardDistances[i] + x;
+
   float y = marginVertical+(i*unit)+unit/2;
 
   fill(red);
@@ -139,8 +180,11 @@ void drawRedCard(float minute, float i, String homeOrAway) {
   rect(x, y, unit, unit);
 }
 
-void drawGoal(float minute, float i, String homeOrAway) {
+void drawGoal(float minute, int i, String homeOrAway) {
   float x = mapMinutes(minute);
+
+  x = mapMinutes(minute) + redCardDistances[i];
+
   float y = marginVertical+(i*unit)+unit/2;
 
   if (homeOrAway.equals("home")) {

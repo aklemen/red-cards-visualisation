@@ -1,7 +1,7 @@
 // reading the file and adding to list
 
 ArrayList<Match> listOfMatches = new ArrayList();
-float listOfMatchesSize;
+int listOfMatchesSize;
 
 void loadFileToObjectList() {
 

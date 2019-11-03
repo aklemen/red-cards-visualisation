@@ -55,9 +55,9 @@ void setup() {
 
   // fonts
 
-  regularFont = createFont("Montserrat Regular", 12);
-  mediumFont = createFont("Montserrat Medium", 12);
-  boldFont = createFont("Montserrat Bold", 12);
+  regularFont = createFont("Montserrat Regular", 48, true);
+  mediumFont = createFont("Montserrat Medium", 48, true);
+  boldFont = createFont("Montserrat Bold", 48, true);
   textFont(boldFont);
 
 
@@ -119,6 +119,7 @@ void draw() {
   noStroke();
 
   drawScaleNumbers();
+  drawButtonsAndTitles();
 
   for (int i = 0; i < listOfMatchesSize; i++) {
     Match tempMatch = listOfMatches.get(i);
@@ -128,11 +129,15 @@ void draw() {
       fill(lightGrey);
       rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
     }
+    
+    int currentRedTime = 0;
 
     if (tempMatch.getHomeRedTime() != 0) {
       currentRedCardIndicator = "home";
+      currentRedTime = tempMatch.getHomeRedTime();
     } else {
       currentRedCardIndicator = "away";
+      currentRedTime = tempMatch.getAwayRedTime();
     }
 
     rectMode(CORNER);
@@ -162,6 +167,12 @@ void draw() {
     }
 
     interpolators[i].update();
+    
+    float currentRedX = interpolators[i].value;
+    
+    if (overRect(currentRedX - unit/2, marginVertical+(i*unit), unit, unit)){
+      drawPopupRed(currentRedTime, i, currentRedX);
+    }
 
     // draw red cards
 
@@ -197,7 +208,6 @@ void draw() {
     drawName(i);
   }
 
-  drawButtons();
 }
 
 // mouse pressed overriden
@@ -271,14 +281,14 @@ void drawPopup(int homeScore, int awayScore, int i, String winner) {
   stroke(lightGrey);
   strokeWeight(2);
   pushMatrix();
-  translate(marginHorizontal/2 - unit*2, marginVertical - (unit*3) + unit*i);  
+  translate(marginHorizontal/2 - unit*2, marginVertical - (unit*2.5) + unit*i);  
   beginShape ();
   vertex (0, 0);
   vertex (unit*4, 0);
   vertex (unit*4, unit*2);
-  vertex (unit*3, unit*2);
-  vertex (unit*2, unit*3);
-  vertex (unit, unit*2);
+  vertex (unit*2.5, unit*2);
+  vertex (unit*2, unit*2.5);
+  vertex (unit*1.5, unit*2);
   vertex (0, unit*2);
   vertex (0, 0);
   endShape ();
@@ -288,10 +298,36 @@ void drawPopup(int homeScore, int awayScore, int i, String winner) {
   textAlign(CENTER, CENTER);
   textFont(boldFont);
   textSize(unit);
-  text(String.valueOf(homeScore) + " : " + String.valueOf(awayScore), marginHorizontal/2, marginVertical - (unit*2.1) + unit*i);
+  text(String.valueOf(homeScore) + " : " + String.valueOf(awayScore), marginHorizontal/2, marginVertical - (unit*1.7) + unit*i);
 }
 
-void drawButtons() {
+
+void drawPopupRed(int currentRedTime, int i, float currentRedX){
+  fill(lightRed);
+  stroke(lightGrey);
+  strokeWeight(2);
+  pushMatrix();
+  translate(currentRedX - unit*2, marginVertical - (unit*2.5) + unit*i);  
+  beginShape ();
+  vertex (0, 0);
+  vertex (unit*4, 0);
+  vertex (unit*4, unit*2);
+  vertex (unit*2.5, unit*2);
+  vertex (unit*2, unit*2.5);
+  vertex (unit*1.5, unit*2);
+  vertex (0, unit*2);
+  vertex (0, 0);
+  endShape ();
+  popMatrix();
+
+  fill(white);
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit);
+  text(String.valueOf(currentRedTime)+"'", currentRedX, marginVertical - (unit*1.6) + unit*i);
+}
+
+void drawButtonsAndTitles() {
 
   // toolbar
 
@@ -306,7 +342,7 @@ void drawButtons() {
   textFont(boldFont);
   textSize(unit);
   fill(white);
-  text("Preklop načina", width - (marginHorizontal/3), marginVertical + unit*12);
+  text("Preklop pogleda", width - (marginHorizontal/3), marginVertical + unit*12);
 
   modeSwitch.setSize((int)unit*5, (int)unit*3);
   modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical + unit*14);
@@ -342,6 +378,27 @@ void drawButtons() {
     fill(withRCLight);
   }
   ellipse(width - (marginHorizontal/3), marginVertical + unit*57.5, (int)unit*5.5, (int)unit*5.5);
+  
+   // title
+
+  fill(black);
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit*2);
+  text("Kako rdeči kartoni vplivajo na število golov?", width/2, marginVertical/2);
+
+  fill(darkGrey);
+  //textAlign(RIGHT, CENTER);
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit*1.5);
+  //text("TEKME", marginHorizontal - 2*unit, marginVertical - unit*2);
+  text("TEKME", marginHorizontal/2, marginVertical - unit*2);
+  
+  textAlign(LEFT, CENTER);
+  text("GOLI IN RK", marginHorizontal + 3*unit, marginVertical - unit*3);
+  
+  
 }
 
 void drawScaleNumbers() {
@@ -366,17 +423,12 @@ void drawScaleNumbers() {
 void drawScale() {
   strokeWeight(2);
   stroke(darkGrey);  
-  line(marginHorizontal, marginVertical, marginHorizontal, height - marginVertical);
-  //line(marginHorizontal, marginVertical, width - marginHorizontal, marginVertical);
+  line(marginHorizontal, marginVertical - unit*3, marginHorizontal, height - marginVertical);
+  
+  line(marginHorizontal/2 + unit*4, marginVertical - unit*2, marginHorizontal, marginVertical - unit*2);
+  line(marginHorizontal + unit*2, marginVertical - unit*3, marginHorizontal, marginVertical - unit*3);
+  
   line(marginHorizontal, height - marginVertical, width - marginHorizontal, height - marginVertical);
-
-  // title
-
-  fill(black);
-  textAlign(CENTER, CENTER);
-  textFont(boldFont);
-  textSize(unit*2);
-  text("Kako rdeči kartoni vplivajo na število golov?", width/2, marginVertical/2);
 }
 
 void drawName(int i) {

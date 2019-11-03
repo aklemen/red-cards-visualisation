@@ -2,26 +2,6 @@ import controlP5.*;
 
 import java.util.Date;
 
-// Locations in usual mode
-
-float homeX[];
-float awayX[];
-float redX[];
-
-// Locations in special mode
-
-float homeSpecialX[];
-float awaySpecialX[];
-float redSpecialX[];
-
-// Current locations
-
-float homeSpecialX[];
-float awaySpecialX[];
-float redSpecialX[];
-
-float redCardDistances[];
-
 ControlP5 cp5;
 
 float unit; 
@@ -32,7 +12,21 @@ String closestText;
 float closestTextX;
 float closestTextY;
 
+Integrator[] interpolators;
+Integrator[][] homeInterpolators;
+Integrator[][] awayInterpolators;
 
+PFont regularFont;
+PFont mediumFont;
+PFont boldFont;
+
+boolean modeSwitchValue = false;
+
+boolean redCards = true;
+boolean teamWithRC = true;
+boolean teamNoRC = true;
+
+String currentRedCardIndicator;
 
 void setup() {
 
@@ -43,104 +37,204 @@ void setup() {
   surface.setResizable(true);
   smooth();
 
+  regularFont = createFont("Montserrat Regular", 12);
+  mediumFont = createFont("Montserrat Medium", 12);
+  boldFont = createFont("Montserrat Bold", 12);
+  textFont(boldFont);
+
   // init list
 
   loadFileToObjectList();
-
-  redCardDistances = new float[listOfMatchesSize];
-  homeLocsX = new float[listOfMatchesSize];
-  awayLocsX = new float[listOfMatchesSize];
-  redCardLocsX = new float[listOfMatchesSize];
 
   cp5 = new ControlP5(this);
 
   unit = (height - (2*marginVertical)) / (listOfMatchesSize);
 
-  modeSwitch = cp5.addToggle("modeSwitch")
+  modeSwitch = cp5.addToggle("modeSwitchValue")
     .setCaptionLabel("")
     .setMode(ControlP5.SWITCH)
-    .setColorBackground(lightGrey)
-    .setColorForeground(home)
-    .setValueLabel("HEEJ") 
-    //.setValue(true)
+    .setColorBackground(home)
+    .setColorActive(lightGrey)
     ;
+
+  updateLocations();
+
+  interpolators = new Integrator[listOfMatchesSize];
+  homeInterpolators = new Integrator[listOfMatchesSize][5];
+  awayInterpolators = new Integrator[listOfMatchesSize][5];
+
+
+  for (int i = 0; i < listOfMatchesSize; i++) {
+    float initRedValue = locationsList.get(i).getRedCardX();
+    interpolators[i] = new Integrator(initRedValue);
+    interpolators[i].attraction = 0.1;
+
+    for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
+      float initHomeValue = locationsList.get(i).getHomeGoalsX()[j];
+      homeInterpolators[i][j] = new Integrator(initHomeValue);
+      homeInterpolators[i][j].attraction = 0.1;
+    }
+
+    for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
+      float initAwayValue = locationsList.get(i).getAwayGoalsX()[j];
+      awayInterpolators[i][j] = new Integrator(initAwayValue);
+      awayInterpolators[i][j].attraction = 0.1;
+    }
+  }
 }
+
+void setCurrent() {
+  if (!modeSwitchValue) {
+
+    for (int i = 0; i < listOfMatchesSize; i++) {
+
+      interpolators[i].target(locationsList.get(i).getRedCardX());
+
+      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
+        homeInterpolators[i][j].target(locationsList.get(i).getHomeGoalsX()[j]);
+      }
+
+      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
+        awayInterpolators[i][j].target(locationsList.get(i).getAwayGoalsX()[j]);
+      }
+    }
+  } else {
+    for (int i = 0; i < listOfMatchesSize; i++) {
+
+      interpolators[i].target(specialLocationsList.get(i).getRedCardX());
+
+      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
+        homeInterpolators[i][j].target(specialLocationsList.get(i).getHomeGoalsX()[j]);
+      }
+
+      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
+        awayInterpolators[i][j].target(specialLocationsList.get(i).getAwayGoalsX()[j]);
+      }
+    }
+  }
+}
+
+
+void mousePressed() {
+
+  // red cards button
+
+  if (overRect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical*4, (int)unit*5, (int)unit*5)) {
+    teamNoRC = !teamNoRC;
+  }
+  
+  // team with red card button
+  
+  
+  // team without red card button
+  
+}
+
+
 
 void draw() {
 
-  // define the unit
+  background(255);
+
+  updateLocations();
+  setCurrent();
 
   unit = (height - (2*marginVertical)) / (listOfMatchesSize);
 
-  // horizontal lines and scale
 
   rectMode(CORNER);
   noStroke();
-  textSize(unit*0.7);
+
+  drawScaleNumbers();
 
   for (int i = 0; i < listOfMatchesSize; i++) {
-
     Match tempMatch = listOfMatches.get(i);
-
-    noStroke();
-    rectMode(CORNER);
 
     if (i % 2 == 0) {
       fill(lightGrey);
       rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
-    } else {
-      fill(white);
-      rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
     }
 
-    drawName(i);
-    drawScale();
 
+
+    interpolators[i].update();
 
     // draw red cards
 
-    if (tempMatch.getHomeRedTime() != 0) {
-      drawRedCard(tempMatch.getHomeRedTime(), i, "home");
-    } else {
-      drawRedCard(tempMatch.getAwayRedTime(), i, "away");
+    if (redCards) {
+      if (tempMatch.getHomeRedTime() != 0) {
+        drawRedCard(i, "home");
+        currentRedCardIndicator = "home";
+      } else {
+        drawRedCard(i, "away");
+        currentRedCardIndicator = "away";
+      }
     }
-
     // draw goals
 
-    int[] tempGoals;
-
-    if (tempMatch.getHomeGoals().length > 0) {
-      tempGoals = tempMatch.getHomeGoals();
-      for (int j = 0; j < tempGoals.length; j++) {
-        drawGoal(tempGoals[j], i, "home");
+    for (int j = 0; j < listOfMatches.get(i).getHomeGoals().length; j++) {
+      if ((currentRedCardIndicator.equals("home") && teamWithRC) || teamNoRC) {
+        homeInterpolators[i][j].update();
+        drawGoal(i, j, "home");
       }
     }
 
-    if (tempMatch.getAwayGoals().length > 0) {
-      tempGoals = tempMatch.getAwayGoals();
-      for (int j = 0; j < tempGoals.length; j++) {
-        drawGoal(tempGoals[j], i, "away");
+    for (int j = 0; j < listOfMatches.get(i).getAwayGoals().length; j++) {
+      if ((currentRedCardIndicator.equals("away") && teamWithRC) || teamNoRC) {
+        awayInterpolators[i][j].update();
+        drawGoal(i, j, "away");
       }
     }
+
+    drawScale();
+    drawName(i);
   }
 
-  rectMode(CENTER);
+
   modeSwitch.setSize((int)unit*5, (int)unit*3);
   modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical*3);
+  rectMode(CORNER);
+  if (redCards) {
+    fill(red);
+  } else {
+    fill(lightRed);
+  }
+  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical*4, (int)unit*5, (int)unit*5);
 }
 
 
+void drawScaleNumbers() {
+  if (!modeSwitchValue) {
+    stroke(lightGrey);
+
+    strokeWeight(2);
+    //line(mapMinutes(45), height - marginVertical - unit/2, mapMinutes(45), height - marginVertical);
+    line(mapMinutes(45), marginVertical, mapMinutes(45), height - marginVertical);
+    line(mapMinutes(90), marginVertical, mapMinutes(90), height - marginVertical);
+
+    fill(darkGrey);
+    textAlign(CENTER, CENTER);
+    textSize(unit*2);
+    text("0'", marginHorizontal, height - marginVertical + unit*2);
+    text("45'", mapMinutes(45), height - marginVertical + unit*2);
+    text("90'", mapMinutes(90), height - marginVertical + unit*2);
+  }
+}
+
 void drawScale() {
-  //strokeWeight(1);
+  strokeWeight(2);
   //stroke(lightGrey);
   //line(mapMinutes(45), marginVertical, mapMinutes(45), height - marginVertical);
   //line(mapMinutes(90), marginVertical, mapMinutes(90), height - marginVertical);
 
   // axis
 
-  stroke(black);  
+  stroke(darkGrey);  
   line(marginHorizontal, marginVertical, marginHorizontal, height - marginVertical);
+  //line(marginHorizontal, marginVertical, width - marginHorizontal, marginVertical);
   line(marginHorizontal, height - marginVertical, width - marginHorizontal, height - marginVertical);
+
+
 
   // toolbar
 
@@ -151,6 +245,8 @@ void drawScale() {
 }
 
 void drawName(int i) {
+  textFont(mediumFont);
+  textSize(unit*0.8);
   fill(black);
   textAlign(RIGHT, CENTER);
   text(listOfMatches.get(i).getHomeTeam(), marginHorizontal/2 - (unit/2), marginVertical+(unit/2)+(i*unit));
@@ -160,12 +256,9 @@ void drawName(int i) {
   text(listOfMatches.get(i).getAwayTeam(), marginHorizontal/2 + (unit/2), marginVertical+(unit/2)+(i*unit));
 }
 
-void drawRedCard(float minute, int i, String homeOrAway) {
-  float x = mapMinutes(minute);
-  redCardDistances[i] = width/2 - x;
-
-  x = redCardDistances[i] + x;
-
+void drawRedCard(int i, String homeOrAway) {
+  //float x = mapMinutes(minute);
+  float x = interpolators[i].value;
   float y = marginVertical+(i*unit)+unit/2;
 
   fill(red);
@@ -180,17 +273,17 @@ void drawRedCard(float minute, int i, String homeOrAway) {
   rect(x, y, unit, unit);
 }
 
-void drawGoal(float minute, int i, String homeOrAway) {
-  float x = mapMinutes(minute);
-
-  x = mapMinutes(minute) + redCardDistances[i];
+void drawGoal(int i, int j, String homeOrAway) {
+  float x;
 
   float y = marginVertical+(i*unit)+unit/2;
 
   if (homeOrAway.equals("home")) {
+    x = homeInterpolators[i][j].value;
     fill(home);
   } else {
     fill(away);
+    x = awayInterpolators[i][j].value;
   }
   noStroke();
   ellipse(x, y, unit, unit);

@@ -1,24 +1,35 @@
 class Location {
-  int redCard;
-  int[] homeGoals;
-  int[] awayGoals;
- 
-  Location(int redCard, int[] homeGoals, int[] awayGoals){
-    this.redCard = redCard;
-    this.homeGoals = homeGoals;
-    this.awayGoals = awayGoals;
+  float redCardX;
+  float[] homeGoalsX;
+  float[] awayGoalsX;
+
+  Location(float redCardX, float[] homeGoalsX, float[] awayGoalsX) {
+    this.redCardX = redCardX;
+    this.homeGoalsX = homeGoalsX;
+    this.awayGoalsX = awayGoalsX;
   }
-  
-  int getRedCard(){
-    return redCard;
+
+  float getRedCardX() {
+    return redCardX;
   }
-  
-  int[] getHomeGoals(){
-    return homeGoals;
+
+  float[] getHomeGoalsX() {
+    return homeGoalsX;
   }
-  
-  int[] getAwayGoals(){
-    return awayGoals;
+
+  float[] getAwayGoalsX() {
+    return awayGoalsX;
   }
-  
+
+  void setRedCardX(float redCardX) {
+    this.redCardX = redCardX;
+  }
+
+  void setHomeGoalsX(float[] homeGoalsX) {
+    this.homeGoalsX = homeGoalsX;
+  }
+
+  void setAwayGoalsX(float[] awayGoalsX) {
+    this.awayGoalsX = awayGoalsX;
+  }
 }

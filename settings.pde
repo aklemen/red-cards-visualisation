@@ -5,6 +5,7 @@ color black = color(0);
 color darkGrey = color(150);
 color lightGrey = color(240);
 color red = color(207,55,33);
+color lightRed = color(235,175,166);
 color home = color(49,169,184);
 //color away = color(#F5BE41);
 color away = color(37,128,57);

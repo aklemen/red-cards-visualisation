@@ -18,22 +18,111 @@ void loadFileToObjectList() {
 
     listOfMatches.add(tempMatch);
   }
-  
+
   listOfMatchesSize = listOfMatches.size();
-  
 }
+
+ArrayList<Location> locationsList = new ArrayList();
+float redCardX;
+float redCard;
+float[] homeGoalsX = new float[5];
+float[] awayGoalsX = new float[5];;
+
+ArrayList<Location> specialLocationsList = new ArrayList();
+float specialRedCardX;
+float redCardDifferenceX;
+float[] specialHomeGoalsX = new float[5];
+float[] specialAwayGoalsX = new float[5];
+
+float halfX;
+
+void updateLocations() {
+
+  locationsList.clear();
+  specialLocationsList.clear();
+
+  for (int i = 0; i < listOfMatchesSize; i++) {
+
+    Match tempMatch = listOfMatches.get(i);
+
+    // red cards
+
+    if (tempMatch.getHomeRedTime() != 0) {
+      redCard = tempMatch.getHomeRedTime();
+      redCardX = mapMinutes(redCard);
+      //redCardDifferenceMinutes = 45 - tempMatch.getHomeRedTime();
+    } else {
+      redCard = tempMatch.getAwayRedTime();
+      redCardX = mapMinutes(redCard);
+      //redCardDifferenceMinutes = 45 - tempMatch.getAwayRedTime();
+    }
+
+    specialRedCardX = mapMinutesOnHalf(redCard);
+    
+    halfX = mapMinutes(maxMinute/2);
+
+    redCardDifferenceX = halfX - specialRedCardX;
+    
+    specialRedCardX = mapMinutesOnHalf(redCard) + redCardDifferenceX;
+
+    int[] tempGoals;
+
+    if (tempMatch.getHomeGoals().length > 0) {
+      tempGoals = tempMatch.getHomeGoals();
+      homeGoalsX = new float[tempGoals.length];
+      specialHomeGoalsX = new float[tempGoals.length];
+      for (int j = 0; j < tempGoals.length; j++) {
+        homeGoalsX[j] = mapMinutes((float)tempGoals[j]);
+        specialHomeGoalsX[j] = mapMinutesOnHalf((float)tempGoals[j]) + redCardDifferenceX;
+      }
+    }
+
+    if (tempMatch.getAwayGoals().length > 0) {
+      tempGoals = tempMatch.getAwayGoals();
+      awayGoalsX = new float[tempGoals.length];
+      specialAwayGoalsX = new float[tempGoals.length];
+      for (int j = 0; j < tempGoals.length; j++) {
+        awayGoalsX[j] = mapMinutes((float)tempGoals[j]);
+        specialAwayGoalsX[j] = mapMinutesOnHalf((float)tempGoals[j]) + redCardDifferenceX;
+      }
+    }
+
+    Location tempLocation = new Location(redCardX, homeGoalsX, awayGoalsX);
+
+    Location tempSpecialLocation = new Location(specialRedCardX, specialHomeGoalsX, specialAwayGoalsX);
+
+    locationsList.add(i, tempLocation);
+    specialLocationsList.add(i, tempSpecialLocation);
+  }
+}
+
 
 // maps minutes to fit in graph
 
 float mapMinutes(float minute) {
-  return map(minute, 0, maxMinute, marginHorizontal, (width/2));
+  return map(minute, 0, maxMinute, marginHorizontal, width - marginHorizontal);
 }
 
-// checks if mouse is over rectangle
+//TODO preglej, če je to ok glede postavitve
+float mapMinutesOnHalf(float minute) {
+  return map(minute, 0, maxMinute, marginHorizontal, mapMinutes(maxMinute/2));
+}
+
+// checks if mouse is over rectangle or circle
 
 boolean overRect(float x, float y, float width, float height) {
   if (mouseX >= x && mouseX <= x+width && 
     mouseY >= y && mouseY <= y+height) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+boolean overCircle(int x, int y, int diameter) {
+  float disX = x - mouseX;
+  float disY = y - mouseY;
+  if(sqrt(sq(disX) + sq(disY)) < diameter/2 ) {
     return true;
   } else {
     return false;

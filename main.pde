@@ -1,5 +1,4 @@
 import controlP5.*;
-
 import java.util.Date;
 
 ControlP5 cp5;
@@ -7,18 +6,10 @@ ControlP5 cp5;
 float unit; 
 Toggle modeSwitch;
 
-float closestDist;
-String closestText;
-float closestTextX;
-float closestTextY;
-
 Integrator[] interpolators;
-Integrator[][] homeInterpolators;
-Integrator[][] awayInterpolators;
+Integrator[][] homeInterpolators, awayInterpolators;
 
-PFont regularFont;
-PFont mediumFont;
-PFont boldFont;
+PFont regularFont, mediumFont, boldFont;
 
 boolean modeSwitchValue = false;
 
@@ -30,19 +21,24 @@ String currentRedCardIndicator;
 
 color white, black, darkGrey, lightGrey, red, lightRed, withRC, withRCLight, noRC, noRCLight, blue;
 
+final float maxMinute = 100;
+float marginHorizontal, marginVertical;
+
 void setup() {
 
   // setup the surface
 
   colorMode(HSB, 360, 100, 100);
-  
+  size (1500, 1000);
+  surface.setResizable(true);
+  smooth();
 
+  // margins
 
-//color withRC = color(245, 190, 65);
-//color withRCLight = color(99,92,76);
-//color noRC = color(37,128,57);
-//color noRCLight = color(88,96,90);
-//color blue = color(49,169,184);
+  marginHorizontal = 200;
+  marginVertical = 80;
+
+  // colors
 
   white = color(0, 0, 100);
   black = color(0, 0, 0);
@@ -56,19 +52,14 @@ void setup() {
   noRCLight = color(133, 31, 60);
   blue = color(187, 73, 72);
 
-  background(white);
-  size (1500, 1000);
-  surface.setResizable(true);
-  smooth();
+  // fonts
 
   regularFont = createFont("Montserrat Regular", 12);
   mediumFont = createFont("Montserrat Medium", 12);
   boldFont = createFont("Montserrat Bold", 12);
   textFont(boldFont);
 
-  // init list
 
-  loadFileToObjectList();
 
   cp5 = new ControlP5(this);
 
@@ -81,7 +72,13 @@ void setup() {
     .setColorActive(lightGrey)
     ;
 
+  // init lists in update locations
+
+  loadFileToObjectList();
+
   updateLocations();
+
+  // set interpolators
 
   interpolators = new Integrator[listOfMatchesSize];
   homeInterpolators = new Integrator[listOfMatchesSize][5];
@@ -107,39 +104,7 @@ void setup() {
   }
 }
 
-void setCurrent() {
-  if (!modeSwitchValue) {
-
-    for (int i = 0; i < listOfMatchesSize; i++) {
-
-      interpolators[i].target(locationsList.get(i).getRedCardX());
-
-      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
-        homeInterpolators[i][j].target(locationsList.get(i).getHomeGoalsX()[j]);
-      }
-
-      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
-        awayInterpolators[i][j].target(locationsList.get(i).getAwayGoalsX()[j]);
-      }
-    }
-  } else {
-    for (int i = 0; i < listOfMatchesSize; i++) {
-
-      interpolators[i].target(specialLocationsList.get(i).getRedCardX());
-
-      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
-        homeInterpolators[i][j].target(specialLocationsList.get(i).getHomeGoalsX()[j]);
-      }
-
-      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
-        awayInterpolators[i][j].target(specialLocationsList.get(i).getAwayGoalsX()[j]);
-      }
-    }
-  }
-}
-
-
-
+// draw function
 
 void draw() {
   background(white);
@@ -149,7 +114,6 @@ void draw() {
 
   unit = (height - (2*marginVertical)) / (listOfMatchesSize);
 
-
   rectMode(CORNER);
   noStroke();
 
@@ -157,18 +121,16 @@ void draw() {
 
   for (int i = 0; i < listOfMatchesSize; i++) {
     Match tempMatch = listOfMatches.get(i);
-
+    rectMode(CORNER);
+    noStroke();
     if (i % 2 == 0) {
       fill(lightGrey);
       rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
     }
 
-
-
     interpolators[i].update();
 
     // draw red cards
-
 
     if (tempMatch.getHomeRedTime() != 0) {
       if (redCards) {
@@ -210,57 +172,10 @@ void draw() {
     drawName(i);
   }
 
-
-
-  textAlign(CENTER, CENTER);
-  textFont(boldFont);
-  textSize(unit);
-  fill(white);
-  text("Preklop načina", width - (marginHorizontal/3), marginVertical + unit*12);
-
-  modeSwitch.setSize((int)unit*5, (int)unit*3);
-  modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical + unit*14);
-
-
-
-  fill(white);
-  text("Rdeči kartoni", width - (marginHorizontal/3), marginVertical + unit*29);
-
-  rectMode(CORNER);
-  if (redCards) {
-    fill(red);
-  } else {
-    fill(lightRed);
-  }
-  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5, unit/2);
-
-
-
-
-  fill(white);
-  text("Goli ekipe brez RK", width - (marginHorizontal/3), marginVertical + unit*41);
-
-  if (teamNoRC) {
-    fill(noRC);
-  } else {
-    fill(noRCLight);
-  }
-  //ellipse(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*43, (int)unit*5, (int)unit*5);
-  ellipse(width - (marginHorizontal/3), marginVertical + unit*45.5, (int)unit*5.5, (int)unit*5.5);
-
-
-
-
-  fill(white);
-  text("Goli ekipe z RK", width - (marginHorizontal/3), marginVertical + unit*53);
-
-  if (teamWithRC) {
-    fill(withRC);
-  } else {
-    fill(withRCLight);
-  }
-  ellipse(width - (marginHorizontal/3), marginVertical + unit*57.5, (int)unit*5.5, (int)unit*5.5);
+  drawButtons();
 }
+
+// mouse pressed overriden
 
 void mousePressed() {
 
@@ -283,6 +198,85 @@ void mousePressed() {
   }
 }
 
+// set current view
+
+void setCurrent() {
+  if (!modeSwitchValue) {
+
+    for (int i = 0; i < listOfMatchesSize; i++) {
+      interpolators[i].target(locationsList.get(i).getRedCardX());
+      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
+        homeInterpolators[i][j].target(locationsList.get(i).getHomeGoalsX()[j]);
+      }
+      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
+        awayInterpolators[i][j].target(locationsList.get(i).getAwayGoalsX()[j]);
+      }
+    }
+  } else {
+    for (int i = 0; i < listOfMatchesSize; i++) {
+      interpolators[i].target(specialLocationsList.get(i).getRedCardX());
+      for (int j = 0; j < locationsList.get(i).getHomeGoalsX().length; j++) {
+        homeInterpolators[i][j].target(specialLocationsList.get(i).getHomeGoalsX()[j]);
+      }
+      for (int j = 0; j < locationsList.get(i).getAwayGoalsX().length; j++) {
+        awayInterpolators[i][j].target(specialLocationsList.get(i).getAwayGoalsX()[j]);
+      }
+    }
+  }
+}
+
+void drawButtons() {
+
+  // toolbar
+
+  rectMode(CORNER);
+  noStroke();
+  fill(darkGrey);
+  rect(width-((2*marginHorizontal)/3), 2*marginVertical, ((2*marginHorizontal)/3), height-4*marginVertical);
+
+  // buttons
+
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit);
+  fill(white);
+  text("Preklop načina", width - (marginHorizontal/3), marginVertical + unit*12);
+
+  modeSwitch.setSize((int)unit*5, (int)unit*3);
+  modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical + unit*14);
+
+  fill(white);
+  text("Rdeči kartoni", width - (marginHorizontal/3), marginVertical + unit*29);
+
+  rectMode(CORNER);
+  if (redCards) {
+    fill(red);
+  } else {
+    fill(lightRed);
+  }
+  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5, unit/2);
+
+  fill(white);
+  text("Goli ekipe brez RK", width - (marginHorizontal/3), marginVertical + unit*41);
+
+  if (teamNoRC) {
+    fill(noRC);
+  } else {
+    fill(noRCLight);
+  }
+  //ellipse(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*43, (int)unit*5, (int)unit*5);
+  ellipse(width - (marginHorizontal/3), marginVertical + unit*45.5, (int)unit*5.5, (int)unit*5.5);
+
+  fill(white);
+  text("Goli ekipe z RK", width - (marginHorizontal/3), marginVertical + unit*53);
+
+  if (teamWithRC) {
+    fill(withRC);
+  } else {
+    fill(withRCLight);
+  }
+  ellipse(width - (marginHorizontal/3), marginVertical + unit*57.5, (int)unit*5.5, (int)unit*5.5);
+}
 
 void drawScaleNumbers() {
   if (!modeSwitchValue) {
@@ -305,25 +299,10 @@ void drawScaleNumbers() {
 
 void drawScale() {
   strokeWeight(2);
-  //stroke(lightGrey);
-  //line(mapMinutes(45), marginVertical, mapMinutes(45), height - marginVertical);
-  //line(mapMinutes(90), marginVertical, mapMinutes(90), height - marginVertical);
-
-  // axis
-
   stroke(darkGrey);  
   line(marginHorizontal, marginVertical, marginHorizontal, height - marginVertical);
   //line(marginHorizontal, marginVertical, width - marginHorizontal, marginVertical);
   line(marginHorizontal, height - marginVertical, width - marginHorizontal, height - marginVertical);
-
-
-
-  // toolbar
-
-  rectMode(CORNER);
-  noStroke();
-  fill(darkGrey);
-  rect(width-((2*marginHorizontal)/3), 2*marginVertical, ((2*marginHorizontal)/3), height-4*marginVertical);
 }
 
 void drawName(int i) {
@@ -338,19 +317,14 @@ void drawName(int i) {
   text(listOfMatches.get(i).getAwayTeam(), marginHorizontal/2 + (unit/2), marginVertical+(unit/2)+(i*unit));
 }
 
+// drawing elements
+
 void drawRedCard(int i, String homeOrAway) {
-  //float x = mapMinutes(minute);
   float x = interpolators[i].value;
   float y = marginVertical+(i*unit)+unit/2;
-  
+
   stroke(darkGrey);
   strokeWeight(1);
-
-  //if (homeOrAway.equals("home")) {
-  //  stroke(black);
-  //} else {
-  //  stroke(blue);
-  //}
 
   fill(red);
   rectMode(CENTER);
@@ -359,7 +333,6 @@ void drawRedCard(int i, String homeOrAway) {
 
 void drawGoal(int i, int j, String homeOrAway) {
   float x;
-
   float y = marginVertical+(i*unit)+unit/2;
 
   if (homeOrAway.equals("home")) {

@@ -28,9 +28,33 @@ boolean teamNoRC = true;
 
 String currentRedCardIndicator;
 
+color white, black, darkGrey, lightGrey, red, lightRed, withRC, withRCLight, noRC, noRCLight, blue;
+
 void setup() {
 
   // setup the surface
+
+  colorMode(HSB, 360, 100, 100);
+  
+
+
+//color withRC = color(245, 190, 65);
+//color withRCLight = color(99,92,76);
+//color noRC = color(37,128,57);
+//color noRCLight = color(88,96,90);
+//color blue = color(49,169,184);
+
+  white = color(0, 0, 100);
+  black = color(0, 0, 0);
+  darkGrey = color(0, 0, 59);
+  lightGrey = color(0, 0, 94);
+  red = color(8, 84, 86);
+  lightRed = color(8, 44, 86);
+  withRC = color(42, 73, 96);
+  withRCLight = color(42, 33, 96);
+  noRC = color(133, 71, 50);
+  noRCLight = color(133, 31, 60);
+  blue = color(187, 73, 72);
 
   background(white);
   size (1500, 1000);
@@ -118,8 +142,7 @@ void setCurrent() {
 
 
 void draw() {
-
-  background(255);
+  background(white);
 
   updateLocations();
   setCurrent();
@@ -146,37 +169,39 @@ void draw() {
 
     // draw red cards
 
-    if (redCards) {
-      if (tempMatch.getHomeRedTime() != 0) {
+
+    if (tempMatch.getHomeRedTime() != 0) {
+      if (redCards) {
         drawRedCard(i, "home");
-        currentRedCardIndicator = "home";
-      } else {
-        drawRedCard(i, "away");
-        currentRedCardIndicator = "away";
       }
+      currentRedCardIndicator = "home";
+    } else {
+      if (redCards) {
+        drawRedCard(i, "away");
+      }
+      currentRedCardIndicator = "away";
     }
+
     // draw goals
 
     for (int j = 0; j < listOfMatches.get(i).getHomeGoals().length; j++) {
-      if ((currentRedCardIndicator.equals("home") && teamWithRC) || (!currentRedCardIndicator.equals("home") && teamNoRC)) {
-        homeInterpolators[i][j].update();
-        if ((currentRedCardIndicator.equals("home"))) {
-          fill(withRC);
-        } else {
-          fill(noRC);
-        }
+      homeInterpolators[i][j].update();
+      if (currentRedCardIndicator.equals("home") && teamWithRC) {
+        fill(withRC);
+        drawGoal(i, j, "home");
+      } else if (!currentRedCardIndicator.equals("home") && teamNoRC) {
+        fill(noRC);
         drawGoal(i, j, "home");
       }
     }
 
     for (int j = 0; j < listOfMatches.get(i).getAwayGoals().length; j++) {
-      if ((currentRedCardIndicator.equals("away") && teamWithRC) || (!currentRedCardIndicator.equals("away") && teamNoRC)) {
-        awayInterpolators[i][j].update();
-        if ((currentRedCardIndicator.equals("away"))) {
-          fill(withRC);
-        } else {
-          fill(noRC);
-        }
+      awayInterpolators[i][j].update();
+      if (currentRedCardIndicator.equals("away") && teamWithRC) {
+        fill(withRC);
+        drawGoal(i, j, "away");
+      } else if (!currentRedCardIndicator.equals("away") && teamNoRC) {
+        fill(noRC);
         drawGoal(i, j, "away");
       }
     }
@@ -207,7 +232,7 @@ void draw() {
   } else {
     fill(lightRed);
   }
-  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5);
+  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5, unit/2);
 
 
 
@@ -318,9 +343,18 @@ void drawRedCard(int i, String homeOrAway) {
   float x = interpolators[i].value;
   float y = marginVertical+(i*unit)+unit/2;
   
+  stroke(darkGrey);
+  strokeWeight(1);
+
+  //if (homeOrAway.equals("home")) {
+  //  stroke(black);
+  //} else {
+  //  stroke(blue);
+  //}
+
   fill(red);
   rectMode(CENTER);
-  rect(x, y, unit, unit);
+  rect(x, y, unit, unit, unit/5);
 }
 
 void drawGoal(int i, int j, String homeOrAway) {

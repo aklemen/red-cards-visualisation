@@ -119,7 +119,7 @@ boolean overRect(float x, float y, float width, float height) {
   }
 }
 
-boolean overCircle(int x, int y, int diameter) {
+boolean overCircle(float x, float y, float diameter) {
   float disX = x - mouseX;
   float disY = y - mouseY;
   if(sqrt(sq(disX) + sq(disY)) < diameter/2 ) {

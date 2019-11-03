@@ -6,9 +6,11 @@ color darkGrey = color(150);
 color lightGrey = color(240);
 color red = color(207,55,33);
 color lightRed = color(235,175,166);
-color home = color(49,169,184);
-//color away = color(#F5BE41);
-color away = color(37,128,57);
+color withRC = color(245, 190, 65);
+color withRCLight = color(99,92,76);
+color noRC = color(37,128,57);
+color noRCLight = color(88,96,90);
+color blue = color(49,169,184);
 
 // margins
 

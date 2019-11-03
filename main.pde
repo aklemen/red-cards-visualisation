@@ -53,7 +53,7 @@ void setup() {
   modeSwitch = cp5.addToggle("modeSwitchValue")
     .setCaptionLabel("")
     .setMode(ControlP5.SWITCH)
-    .setColorBackground(home)
+    .setColorBackground(blue)
     .setColorActive(lightGrey)
     ;
 
@@ -115,21 +115,6 @@ void setCurrent() {
 }
 
 
-void mousePressed() {
-
-  // red cards button
-
-  if (overRect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical*4, (int)unit*5, (int)unit*5)) {
-    teamNoRC = !teamNoRC;
-  }
-  
-  // team with red card button
-  
-  
-  // team without red card button
-  
-}
-
 
 
 void draw() {
@@ -173,15 +158,25 @@ void draw() {
     // draw goals
 
     for (int j = 0; j < listOfMatches.get(i).getHomeGoals().length; j++) {
-      if ((currentRedCardIndicator.equals("home") && teamWithRC) || teamNoRC) {
+      if ((currentRedCardIndicator.equals("home") && teamWithRC) || (!currentRedCardIndicator.equals("home") && teamNoRC)) {
         homeInterpolators[i][j].update();
+        if ((currentRedCardIndicator.equals("home"))) {
+          fill(withRC);
+        } else {
+          fill(noRC);
+        }
         drawGoal(i, j, "home");
       }
     }
 
     for (int j = 0; j < listOfMatches.get(i).getAwayGoals().length; j++) {
-      if ((currentRedCardIndicator.equals("away") && teamWithRC) || teamNoRC) {
+      if ((currentRedCardIndicator.equals("away") && teamWithRC) || (!currentRedCardIndicator.equals("away") && teamNoRC)) {
         awayInterpolators[i][j].update();
+        if ((currentRedCardIndicator.equals("away"))) {
+          fill(withRC);
+        } else {
+          fill(noRC);
+        }
         drawGoal(i, j, "away");
       }
     }
@@ -191,15 +186,76 @@ void draw() {
   }
 
 
+
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit);
+  fill(white);
+  text("Preklop načina", width - (marginHorizontal/3), marginVertical + unit*12);
+
   modeSwitch.setSize((int)unit*5, (int)unit*3);
-  modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical*3);
+  modeSwitch.setPosition(width - (marginHorizontal/3) - (modeSwitch.getWidth() / 2), marginVertical + unit*14);
+
+
+
+  fill(white);
+  text("Rdeči kartoni", width - (marginHorizontal/3), marginVertical + unit*29);
+
   rectMode(CORNER);
   if (redCards) {
     fill(red);
   } else {
     fill(lightRed);
   }
-  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical*4, (int)unit*5, (int)unit*5);
+  rect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5);
+
+
+
+
+  fill(white);
+  text("Goli ekipe brez RK", width - (marginHorizontal/3), marginVertical + unit*41);
+
+  if (teamNoRC) {
+    fill(noRC);
+  } else {
+    fill(noRCLight);
+  }
+  //ellipse(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*43, (int)unit*5, (int)unit*5);
+  ellipse(width - (marginHorizontal/3), marginVertical + unit*45.5, (int)unit*5.5, (int)unit*5.5);
+
+
+
+
+  fill(white);
+  text("Goli ekipe z RK", width - (marginHorizontal/3), marginVertical + unit*53);
+
+  if (teamWithRC) {
+    fill(withRC);
+  } else {
+    fill(withRCLight);
+  }
+  ellipse(width - (marginHorizontal/3), marginVertical + unit*57.5, (int)unit*5.5, (int)unit*5.5);
+}
+
+void mousePressed() {
+
+  // red cards button
+
+  if (overRect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5)) {
+    redCards = !redCards;
+  }
+
+  // team without red card button
+
+  if (overCircle(width - (marginHorizontal/3), marginVertical + unit*45.5, unit*5.5)) {
+    teamNoRC = !teamNoRC;
+  }
+
+  // team with red card button
+
+  if (overCircle(width - (marginHorizontal/3), marginVertical + unit*57.5, unit*5.5)) {
+    teamWithRC = !teamWithRC;
+  }
 }
 
 
@@ -214,6 +270,7 @@ void drawScaleNumbers() {
 
     fill(darkGrey);
     textAlign(CENTER, CENTER);
+    textFont(mediumFont);
     textSize(unit*2);
     text("0'", marginHorizontal, height - marginVertical + unit*2);
     text("45'", mapMinutes(45), height - marginVertical + unit*2);
@@ -246,7 +303,7 @@ void drawScale() {
 
 void drawName(int i) {
   textFont(mediumFont);
-  textSize(unit*0.8);
+  textSize(unit*0.7);
   fill(black);
   textAlign(RIGHT, CENTER);
   text(listOfMatches.get(i).getHomeTeam(), marginHorizontal/2 - (unit/2), marginVertical+(unit/2)+(i*unit));
@@ -260,15 +317,8 @@ void drawRedCard(int i, String homeOrAway) {
   //float x = mapMinutes(minute);
   float x = interpolators[i].value;
   float y = marginVertical+(i*unit)+unit/2;
-
+  
   fill(red);
-  strokeWeight(3);
-
-  if (homeOrAway.equals("home")) {
-    stroke(home);
-  } else {
-    stroke(away);
-  }
   rectMode(CENTER);
   rect(x, y, unit, unit);
 }
@@ -280,9 +330,7 @@ void drawGoal(int i, int j, String homeOrAway) {
 
   if (homeOrAway.equals("home")) {
     x = homeInterpolators[i][j].value;
-    fill(home);
   } else {
-    fill(away);
     x = awayInterpolators[i][j].value;
   }
   noStroke();

@@ -17,16 +17,85 @@ void loadFileToObjectList() {
     Match tempMatch = new Match(row.getString("Date"), row.getString("HomeTeam"), row.getString("AwayTeam"), row.getInt("HomeRedTime"), row.getInt("AwayRedTime"), row.getString("Result"), row.getInt("HomeGoals"), homeGoals, row.getInt("AwayGoals"), awayGoals);
 
     listOfMatches.add(tempMatch);
+
+    int currentRedTimeHere = 0;
+    String currentRedCardIndicatorHere;
+    
+
+    if (tempMatch.getHomeRedTime() != 0) {
+      currentRedTimeHere = tempMatch.getHomeRedTime();
+      currentRedCardIndicatorHere = "home";
+    } else {
+      currentRedTimeHere = tempMatch.getAwayRedTime();
+      currentRedCardIndicatorHere = "away";
+    }
+    
+    sumOfMinutesFromStartUntilRed += currentRedTimeHere;
+
+    int[] tempGoals;
+
+    if (tempMatch.getHomeGoals().length > 0) {
+      tempGoals = tempMatch.getHomeGoals();
+      for (int j = 0; j < tempGoals.length; j++) {
+        if (tempGoals[j] < currentRedTimeHere) {
+          if (currentRedCardIndicatorHere.equals("home")) {
+            sumOfWithRedUntilRed++;
+          } else {
+            sumOfNoRedUntilRed++;
+          }
+        } else {
+          if (currentRedCardIndicatorHere.equals("home")) {
+            sumOfWithRedFulltime++;
+          } else {
+            sumOfNoRedFulltime++;
+          }
+        }
+      }
+    }
+
+    if (tempMatch.getAwayGoals().length > 0) {
+      tempGoals = tempMatch.getAwayGoals();
+      for (int j = 0; j < tempGoals.length; j++) {
+        if (tempGoals[j] < currentRedTimeHere) {
+          if (currentRedCardIndicatorHere.equals("away")) {
+            sumOfWithRedUntilRed++;
+          } else {
+            sumOfNoRedUntilRed++;
+          }
+        } else {
+          if (currentRedCardIndicatorHere.equals("away")) {
+            sumOfWithRedFulltime++;
+          } else {
+            sumOfNoRedFulltime++;
+          }
+        }
+      }
+    }
   }
 
   listOfMatchesSize = listOfMatches.size();
+  
+  sumOfMinutesFromRedUntilFulltime = maxMinute*listOfMatchesSize - sumOfMinutesFromStartUntilRed;
+
+  percentageGoalsWithRedUntilRed = Math.round(sumOfWithRedUntilRed*100 / (sumOfWithRedUntilRed + sumOfWithRedFulltime));
+  percentageGoalsNoRedUntilRed = Math.round(sumOfNoRedUntilRed*100 / (sumOfNoRedUntilRed + sumOfNoRedFulltime));
+  percentageGoalsWithRedFulltime = Math.round(sumOfWithRedFulltime*100 / (sumOfWithRedUntilRed + sumOfWithRedFulltime));
+  percentageGoalsNoRedFulltime = Math.round(sumOfNoRedFulltime*100 / (sumOfNoRedUntilRed + sumOfNoRedFulltime));
+  
+  goalPerMinWithRedUntilRed = sumOfWithRedUntilRed / sumOfMinutesFromStartUntilRed;
+  goalPerMinNoRedUntilRed = sumOfNoRedUntilRed / sumOfMinutesFromStartUntilRed;
+  goalPerMinWithRedFulltime = sumOfWithRedFulltime / sumOfMinutesFromRedUntilFulltime;
+  goalPerMinNoRedFulltime = sumOfNoRedFulltime / sumOfMinutesFromRedUntilFulltime;
+  
+  
 }
 
 ArrayList<Location> locationsList = new ArrayList();
 float redCardX;
 float redCard;
 float[] homeGoalsX = new float[5];
-float[] awayGoalsX = new float[5];;
+float[] awayGoalsX = new float[5];
+;
 
 ArrayList<Location> specialLocationsList = new ArrayList();
 float specialRedCardX;
@@ -58,11 +127,11 @@ void updateLocations() {
     }
 
     specialRedCardX = mapMinutesOnHalf(redCard);
-    
+
     halfX = mapMinutes(maxMinute/2);
 
     redCardDifferenceX = halfX - specialRedCardX;
-    
+
     specialRedCardX = mapMinutesOnHalf(redCard) + redCardDifferenceX;
 
     int[] tempGoals;
@@ -122,7 +191,7 @@ boolean overRect(float x, float y, float width, float height) {
 boolean overCircle(float x, float y, float diameter) {
   float disX = x - mouseX;
   float disY = y - mouseY;
-  if(sqrt(sq(disX) + sq(disY)) < diameter/2 ) {
+  if (sqrt(sq(disX) + sq(disY)) < diameter/2 ) {
     return true;
   } else {
     return false;

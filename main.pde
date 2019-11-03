@@ -24,6 +24,18 @@ color white, black, darkGrey, lightGrey, red, lightRed, withRC, withRCLight, noR
 final float maxMinute = 100;
 float marginHorizontal, marginVertical;
 
+float sumOfWithRedUntilRed = 0;
+float sumOfNoRedUntilRed = 0;
+float sumOfWithRedFulltime = 0;
+float sumOfNoRedFulltime = 0;
+
+float sumOfMinutesFromStartUntilRed = 0;
+float sumOfMinutesFromRedUntilFulltime = 0;
+
+float percentageGoalsWithRedUntilRed, percentageGoalsNoRedUntilRed, percentageGoalsWithRedFulltime, percentageGoalsNoRedFulltime;
+float goalPerMinWithRedUntilRed, goalPerMinNoRedUntilRed, goalPerMinWithRedFulltime, goalPerMinNoRedFulltime;
+
+
 void setup() {
 
   // setup the surface
@@ -129,7 +141,7 @@ void draw() {
       fill(lightGrey);
       rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
     }
-    
+
     int currentRedTime = 0;
 
     if (tempMatch.getHomeRedTime() != 0) {
@@ -139,6 +151,8 @@ void draw() {
       currentRedCardIndicator = "away";
       currentRedTime = tempMatch.getAwayRedTime();
     }
+
+    // popups on matches
 
     rectMode(CORNER);
     noStroke();
@@ -167,17 +181,16 @@ void draw() {
     }
 
     interpolators[i].update();
-    
-    float currentRedX = interpolators[i].value;
-    
-    if (overRect(currentRedX - unit/2, marginVertical+(i*unit), unit, unit)){
-      drawPopupRed(currentRedTime, i, currentRedX);
-    }
 
-    // draw red cards
+    // draw red cards and popups on red cards
+
+    float currentRedX = interpolators[i].value;
 
     if (redCards) {
       drawRedCard(i, currentRedCardIndicator);
+      if (overRect(currentRedX - unit/2, marginVertical+(i*unit), unit, unit)) {
+        drawPopupSmall(currentRedTime, i, currentRedX, lightRed);
+      }
     }
 
     // draw goals
@@ -187,9 +200,15 @@ void draw() {
       if (currentRedCardIndicator.equals("home") && teamWithRC) {
         fill(withRC);
         drawGoal(i, j, "home");
+        if (overCircle(homeInterpolators[i][j].value, marginVertical+(i*unit), unit*1.3)) {
+          drawPopupSmall(listOfMatches.get(i).getHomeGoals()[j], i, homeInterpolators[i][j].value, withRC);
+        }
       } else if (!currentRedCardIndicator.equals("home") && teamNoRC) {
         fill(noRC);
         drawGoal(i, j, "home");
+        if (overCircle(homeInterpolators[i][j].value, marginVertical+(i*unit), unit*1.3)) {
+          drawPopupSmall(listOfMatches.get(i).getHomeGoals()[j], i, homeInterpolators[i][j].value, noRC);
+        }
       }
     }
 
@@ -198,9 +217,15 @@ void draw() {
       if (currentRedCardIndicator.equals("away") && teamWithRC) {
         fill(withRC);
         drawGoal(i, j, "away");
+        if (overCircle(awayInterpolators[i][j].value, marginVertical+(i*unit), unit*1.3)) {
+          drawPopupSmall(listOfMatches.get(i).getAwayGoals()[j], i, awayInterpolators[i][j].value, withRC);
+        }
       } else if (!currentRedCardIndicator.equals("away") && teamNoRC) {
         fill(noRC);
         drawGoal(i, j, "away");
+        if (overCircle(awayInterpolators[i][j].value, marginVertical+(i*unit), unit*1.3)) {
+          drawPopupSmall(listOfMatches.get(i).getAwayGoals()[j], i, awayInterpolators[i][j].value, noRC);
+        }
       }
     }
 
@@ -208,12 +233,13 @@ void draw() {
     drawName(i);
   }
 
+  drawGraphs();
 }
 
 // mouse pressed overriden
 
 void mousePressed() {
-
+  drawGraphs();
   // red cards button
 
   if (overRect(width - (marginHorizontal/3) - ((int)unit*5)/2, marginVertical + unit*31, (int)unit*5, (int)unit*5)) {
@@ -260,6 +286,72 @@ void setCurrent() {
   }
 }
 
+void drawGraphs() {
+  if (modeSwitchValue) {
+    rectMode(CORNER);
+    noStroke();
+    fill(noRC);
+    rect(width/2-goalPerMinNoRedUntilRed*unit*1000, height - marginVertical + unit, goalPerMinNoRedUntilRed*unit*1000, unit*2);
+    rect(width/2, height - marginVertical + unit, goalPerMinNoRedFulltime*unit*1000, unit*2);
+
+
+    fill(withRC);
+    rect(width/2-goalPerMinWithRedUntilRed*unit*1000, height - marginVertical + unit*3, goalPerMinWithRedUntilRed*unit*1000, unit*2);
+    rect(width/2, height - marginVertical + unit*3, goalPerMinWithRedFulltime*unit*1000, unit*2);
+
+    strokeWeight(2);
+    stroke(darkGrey);
+    line (width/2, height-marginVertical, width/2, height-marginVertical + unit*5);
+
+
+    //println("sum", sumOfWithRedUntilRed);
+    //println("percentageGoalsWithRedUntilRed", percentageGoalsWithRedUntilRed);
+    //println("percentageGoalsWithRedUntilRed", percentageGoalsWithRedFulltime);
+    //println("percentageGoalsNoRedUntilRed", percentageGoalsNoRedUntilRed);
+    //println("percentageGoalsNoRedUntilRed", percentageGoalsNoRedFulltime);
+
+    //println("goalPerMinWithRedUntilRed", goalPerMinWithRedUntilRed*1000);
+    //println("goalPerMinNoRedUntilRed", goalPerMinNoRedUntilRed*1000);
+    //println("goalPerMinWithRedFulltime", goalPerMinWithRedFulltime*1000);
+    //println("goalPerMinNoRedFulltime", goalPerMinNoRedFulltime*1000);
+
+    if (
+      overRect(width/2-goalPerMinNoRedUntilRed*unit*1000, height - marginVertical + unit, goalPerMinNoRedUntilRed*unit*1000, unit*2) ||
+      overRect(width/2, height - marginVertical + unit, goalPerMinNoRedFulltime*unit*1000, unit*2) ||
+      overRect(width/2-goalPerMinWithRedUntilRed*unit*1000, height - marginVertical + unit*3, goalPerMinWithRedUntilRed*unit*1000, unit*2) ||
+      overRect(width/2, height - marginVertical + unit*3, goalPerMinWithRedFulltime*unit*1000, unit*2)
+      ) {
+
+      stroke(lightGrey);
+      fill(darkGrey);
+      strokeWeight(2);
+      pushMatrix();
+      translate(width/2 - unit*8, height - marginVertical - unit*6);  
+      beginShape ();
+      vertex (0, 0); // 1
+      vertex (unit*16, 0); // 2
+      vertex (unit*16, unit*6); // 3
+      vertex (unit*9, unit*6); // 4
+      vertex (unit*8, unit*7); // 5
+      vertex (unit*7, unit*6); // 6
+      vertex (0, unit*6); // 7
+      vertex (0, 0); // 8
+      endShape ();
+      popMatrix();
+
+      fill(white);
+      textAlign(CENTER, CENTER);
+      textFont(boldFont);
+      textSize(unit*1.5);
+      text("GOSTOTA GOLOV", width/2, height - marginVertical - unit*4);
+      textFont(mediumFont);
+      textSize(unit*1.2);
+      text("[ goli / min ]", width/2, height - marginVertical - unit*2);
+    }
+  }
+}
+
+
 void drawPopup(int homeScore, int awayScore, int i, String winner) {
 
   if (winner.equals("H")) {
@@ -302,12 +394,12 @@ void drawPopup(int homeScore, int awayScore, int i, String winner) {
 }
 
 
-void drawPopupRed(int currentRedTime, int i, float currentRedX){
-  fill(lightRed);
+void drawPopupSmall(int minute, int i, float x, color col) {
+  fill(col);
   stroke(lightGrey);
   strokeWeight(2);
   pushMatrix();
-  translate(currentRedX - unit*2, marginVertical - (unit*2.5) + unit*i);  
+  translate(x - unit*2, marginVertical - (unit*2.5) + unit*i);  
   beginShape ();
   vertex (0, 0);
   vertex (unit*4, 0);
@@ -324,7 +416,7 @@ void drawPopupRed(int currentRedTime, int i, float currentRedX){
   textAlign(CENTER, CENTER);
   textFont(boldFont);
   textSize(unit);
-  text(String.valueOf(currentRedTime)+"'", currentRedX, marginVertical - (unit*1.6) + unit*i);
+  text(String.valueOf(minute)+"'", x, marginVertical - (unit*1.6) + unit*i);
 }
 
 void drawButtonsAndTitles() {
@@ -378,14 +470,14 @@ void drawButtonsAndTitles() {
     fill(withRCLight);
   }
   ellipse(width - (marginHorizontal/3), marginVertical + unit*57.5, (int)unit*5.5, (int)unit*5.5);
-  
-   // title
+
+  // title
 
   fill(black);
   textAlign(CENTER, CENTER);
   textFont(boldFont);
   textSize(unit*2);
-  text("Kako rdeči kartoni vplivajo na število golov?", width/2, marginVertical/2);
+  text("Kako rdeči kartoni vplivajo na gole?", width/2, marginVertical/2);
 
   fill(darkGrey);
   //textAlign(RIGHT, CENTER);
@@ -394,11 +486,9 @@ void drawButtonsAndTitles() {
   textSize(unit*1.5);
   //text("TEKME", marginHorizontal - 2*unit, marginVertical - unit*2);
   text("TEKME", marginHorizontal/2, marginVertical - unit*2);
-  
+
   textAlign(LEFT, CENTER);
   text("GOLI IN RK", marginHorizontal + 3*unit, marginVertical - unit*3);
-  
-  
 }
 
 void drawScaleNumbers() {
@@ -424,10 +514,10 @@ void drawScale() {
   strokeWeight(2);
   stroke(darkGrey);  
   line(marginHorizontal, marginVertical - unit*3, marginHorizontal, height - marginVertical);
-  
+
   line(marginHorizontal/2 + unit*4, marginVertical - unit*2, marginHorizontal, marginVertical - unit*2);
   line(marginHorizontal + unit*2, marginVertical - unit*3, marginHorizontal, marginVertical - unit*3);
-  
+
   line(marginHorizontal, height - marginVertical, width - marginHorizontal, height - marginVertical);
 }
 

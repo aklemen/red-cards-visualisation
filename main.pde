@@ -19,7 +19,7 @@ boolean teamNoRC = true;
 
 String currentRedCardIndicator;
 
-color white, black, darkGrey, lightGrey, red, lightRed, withRC, withRCLight, noRC, noRCLight, blue;
+color white, black, darkGrey, lightGrey, red, lightRed, withRC, withRCLight, noRC, noRCLight, blue, darkishGrey;
 
 final float maxMinute = 100;
 float marginHorizontal, marginVertical;
@@ -43,13 +43,14 @@ void setup() {
   white = color(0, 0, 100);
   black = color(0, 0, 0);
   darkGrey = color(0, 0, 59);
+  darkishGrey = color(0, 0, 80);
   lightGrey = color(0, 0, 94);
   red = color(8, 84, 86);
   lightRed = color(8, 44, 86);
   withRC = color(42, 73, 96);
   withRCLight = color(42, 33, 96);
   noRC = color(133, 71, 50);
-  noRCLight = color(133, 31, 60);
+  noRCLight = color(133, 31, 80);
   blue = color(187, 73, 72);
 
   // fonts
@@ -128,20 +129,44 @@ void draw() {
       rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
     }
 
+    if (tempMatch.getHomeRedTime() != 0) {
+      currentRedCardIndicator = "home";
+    } else {
+      currentRedCardIndicator = "away";
+    }
+
+    rectMode(CORNER);
+    noStroke();
+
+    if (overRect(0, marginVertical + (i*unit), width - marginHorizontal, unit)) {
+      if (tempMatch.getResult().equals("H")) {
+        if (currentRedCardIndicator.equals("home")) {
+          fill(withRCLight);
+        } else {
+          fill(noRCLight);
+        }
+      } else if (tempMatch.getResult().equals("A")) {
+        if (currentRedCardIndicator.equals("away")) {
+          fill(withRCLight);
+        } else {
+          fill(noRCLight);
+        }
+      } else {
+        fill(darkishGrey);
+      }
+      rect(0, marginVertical + (i*unit), width - marginHorizontal, unit);
+    }
+
+    if (overRect(0, marginVertical + (i*unit), marginHorizontal, unit)) {
+      drawPopup(tempMatch.getHomeGoalsCount(), tempMatch.getAwayGoalsCount(), i, tempMatch.getResult());
+    }
+
     interpolators[i].update();
 
     // draw red cards
 
-    if (tempMatch.getHomeRedTime() != 0) {
-      if (redCards) {
-        drawRedCard(i, "home");
-      }
-      currentRedCardIndicator = "home";
-    } else {
-      if (redCards) {
-        drawRedCard(i, "away");
-      }
-      currentRedCardIndicator = "away";
+    if (redCards) {
+      drawRedCard(i, currentRedCardIndicator);
     }
 
     // draw goals
@@ -225,6 +250,47 @@ void setCurrent() {
   }
 }
 
+void drawPopup(int homeScore, int awayScore, int i, String winner) {
+
+  if (winner.equals("H")) {
+    if (currentRedCardIndicator.equals("home")) {
+      fill(withRCLight);
+    } else {
+      fill(noRCLight);
+    }
+  } else if (winner.equals("A")) {
+    if (currentRedCardIndicator.equals("away")) {
+      fill(withRCLight);
+    } else {
+      fill(noRCLight);
+    }
+  } else {
+    fill(darkishGrey);
+  }
+
+  stroke(lightGrey);
+  strokeWeight(2);
+  pushMatrix();
+  translate(marginHorizontal/2 - unit*2, marginVertical - (unit*3) + unit*i);  
+  beginShape ();
+  vertex (0, 0);
+  vertex (unit*4, 0);
+  vertex (unit*4, unit*2);
+  vertex (unit*3, unit*2);
+  vertex (unit*2, unit*3);
+  vertex (unit, unit*2);
+  vertex (0, unit*2);
+  vertex (0, 0);
+  endShape ();
+  popMatrix();
+
+  fill(white);
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit);
+  text(String.valueOf(homeScore) + " : " + String.valueOf(awayScore), marginHorizontal/2, marginVertical - (unit*2.1) + unit*i);
+}
+
 void drawButtons() {
 
   // toolbar
@@ -303,6 +369,14 @@ void drawScale() {
   line(marginHorizontal, marginVertical, marginHorizontal, height - marginVertical);
   //line(marginHorizontal, marginVertical, width - marginHorizontal, marginVertical);
   line(marginHorizontal, height - marginVertical, width - marginHorizontal, height - marginVertical);
+
+  // title
+
+  fill(black);
+  textAlign(CENTER, CENTER);
+  textFont(boldFont);
+  textSize(unit*2);
+  text("Kako rdeči kartoni vplivajo na število golov?", width/2, marginVertical/2);
 }
 
 void drawName(int i) {
